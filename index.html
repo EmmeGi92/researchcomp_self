@@ -322,7 +322,7 @@
                 crossCutting: [2, 5, 8, 9]      // Q2, Q5, Q8, Q9
             },
             'Managing Research Tools': {
-                specific: [41],                 // Q41 only
+                specific: [41, 42],             // Q41-Q42
                 crossCutting: [3, 6, 8]        // Q3, Q6, Q8
             }
         };
@@ -372,6 +372,9 @@
             const allParams = {};
             let debugInfo = "URL Parameters received:\n";
             
+            // Check if debug mode is enabled
+            const debugMode = urlParams.has('debug');
+            
             // Get all parameters
             for (let [key, value] of urlParams.entries()) {
                 allParams[key] = value;
@@ -387,6 +390,7 @@
                 debugInfo += "\n❌ NO PARAMETERS RECEIVED\n";
                 debugInfo += "The page is not receiving data from LimeSurvey.\n";
                 debugInfo += "Check the End URL configuration in LimeSurvey.";
+                if (debugMode) document.getElementById('debug').style.display = 'block';
                 document.getElementById('debug').textContent = debugInfo;
                 return null;
             }
@@ -394,6 +398,8 @@
             // Try different formats to extract data
             debugInfo += "\n=== MAPPING ATTEMPT ===\n";
             for (let [key, value] of Object.entries(allParams)) {
+                if (key === 'debug') continue; // Skip debug parameter
+                
                 let questionNum = null;
                 
                 // Format 1: q1, q2, q3, etc.
@@ -407,22 +413,22 @@
                     const match = key.match(/296714X1292X32068(\d+)$/);
                     if (match) {
                         const num = parseInt(match[1]);
-                        if (num >= 1 && num <= 41) {
+                        if (num >= 1 && num <= 42) {
                             questionNum = num;
                             console.log(`LimeSurvey format: ${key} -> question ${questionNum}`);
                         }
                     }
                 }
                 
-                // Format 3: anything ending with a number 1-41
+                // Format 3: anything ending with a number 1-42
                 else {
                     const match = key.match(/(\d+)$/);
                     if (match) {
                         const num = parseInt(match[1]);
-                        if (num >= 1 && num <= 41) {
+                        if (num >= 1 && num <= 42) {
                             questionNum = num;
                             console.log(`Generic format: ${key} -> question ${questionNum}`);
-                        } else if (num >= 2001 && num <= 2041) {
+                        } else if (num >= 2001 && num <= 2042) {
                             questionNum = num - 2000;
                             console.log(`20XX format: ${key} -> question ${questionNum}`);
                         }
@@ -430,7 +436,7 @@
                 }
                 
                 // If we found a valid question number
-                if (questionNum && questionNum >= 1 && questionNum <= 41 && value && value !== '') {
+                if (questionNum && questionNum >= 1 && questionNum <= 42 && value && value !== '') {
                     const numericValue = convertLimeSurveyValue(value);
                     if (numericValue >= 1 && numericValue <= 5) {
                         surveyData[questionNum] = numericValue;
@@ -441,10 +447,11 @@
                 }
             }
             
-            debugInfo += `\nQuestions found: ${Object.keys(surveyData).length}/41\n`;
+            debugInfo += `\nQuestions found: ${Object.keys(surveyData).length}/42\n`;
             console.log('Extracted data:', surveyData);
             console.log('Number of questions found:', Object.keys(surveyData).length);
             
+            if (debugMode) document.getElementById('debug').style.display = 'block';
             document.getElementById('debug').textContent = debugInfo;
             
             return hasData ? surveyData : null;
@@ -456,37 +463,57 @@
             const scores = {};
             const crossCuttingScores = {};
             
+            // Check if debug mode is enabled
+            const urlParams = new URLSearchParams(window.location.search);
+            const debugMode = urlParams.has('debug');
+            let debugCalc = "\n=== DETAILED CALCULATIONS ===\n";
+            
             for (const [area, config] of Object.entries(competenceAreas)) {
+                debugCalc += `\n--- ${area.toUpperCase()} ---\n`;
+                
                 // Calculate base score from specific questions
                 let specificTotal = 0;
                 let specificCount = 0;
+                let specificDetails = "Specific questions: ";
                 
                 for (const questionNum of config.specific) {
                     const value = surveyData[questionNum];
                     if (value !== undefined && value !== null) {
                         specificTotal += value;
                         specificCount++;
+                        specificDetails += `Q${questionNum}=${value} `;
+                    } else {
+                        specificDetails += `Q${questionNum}=missing `;
                     }
                 }
                 
                 const specificScore = specificCount > 0 ? (specificTotal / specificCount) : 0;
+                debugCalc += `${specificDetails}\n`;
+                debugCalc += `Specific average: ${specificTotal}/${specificCount} = ${specificScore.toFixed(3)}\n`;
                 
                 // Calculate cross-cutting score
                 let crossCuttingTotal = 0;
                 let crossCuttingCount = 0;
+                let crossCuttingDetails = "Cross-cutting questions: ";
                 
                 for (const questionNum of config.crossCutting) {
                     const value = surveyData[questionNum];
                     if (value !== undefined && value !== null) {
                         crossCuttingTotal += value;
                         crossCuttingCount++;
+                        crossCuttingDetails += `Q${questionNum}=${value} `;
+                    } else {
+                        crossCuttingDetails += `Q${questionNum}=missing `;
                     }
                 }
                 
                 const crossCuttingScore = crossCuttingCount > 0 ? (crossCuttingTotal / crossCuttingCount) : 0;
+                debugCalc += `${crossCuttingDetails}\n`;
+                debugCalc += `Cross-cutting average: ${crossCuttingTotal}/${crossCuttingCount} = ${crossCuttingScore.toFixed(3)}\n`;
                 
                 // Final score: 70% specific + 30% cross-cutting
                 const finalScore = (specificScore * 0.7) + (crossCuttingScore * 0.3);
+                debugCalc += `Final calculation: (${specificScore.toFixed(3)} × 0.7) + (${crossCuttingScore.toFixed(3)} × 0.3) = ${finalScore.toFixed(3)}\n`;
                 
                 scores[area] = finalScore;
                 crossCuttingScores[area] = crossCuttingScore;
@@ -495,6 +522,10 @@
                 console.log(`  Specific: ${specificScore.toFixed(2)} (${specificCount} answers)`);
                 console.log(`  Cross-cutting: ${crossCuttingScore.toFixed(2)} (${crossCuttingCount} answers)`);
                 console.log(`  Final: ${finalScore.toFixed(2)}`);
+            }
+            
+            if (debugMode) {
+                document.getElementById('debug').textContent += debugCalc;
             }
             
             return { scores, crossCuttingScores };
