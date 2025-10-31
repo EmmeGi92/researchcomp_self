@@ -132,6 +132,38 @@
             white-space: pre-wrap;
         }
 
+        .level-badges-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 20px;
+        }
+
+        .area-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .area-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .area-score {
+            font-size: 14px;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+
         .level-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -241,6 +273,11 @@
             <div id="chartArea" style="display: none;">
                 <div class="chart-container">
                     <canvas id="spiderChart"></canvas>
+                </div>
+                
+                <!-- Level badges for each competence area -->
+                <div class="level-badges-section" id="levelBadges">
+                    <!-- Will be populated with colored badges for each area -->
                 </div>
                 
                 <div class="legend">
@@ -515,68 +552,7 @@
             return level.toLowerCase();
         }
 
-        // Custom plugin to draw level badges on spider chart
-        const levelBadgePlugin = {
-            id: 'levelBadges',
-            afterDraw: function(chart) {
-                const ctx = chart.ctx;
-                const config = chart.config;
-                const chartArea = chart.chartArea;
-                const scale = chart.scales.r;
-                
-                if (!scale || !scores) return;
-                
-                const areas = Object.keys(competenceAreas);
-                const centerX = (chartArea.left + chartArea.right) / 2;
-                const centerY = (chartArea.top + chartArea.bottom) / 2;
-                
-                areas.forEach((area, index) => {
-                    const score = scores[area];
-                    const level = getCompetenceLevel(score);
-                    
-                    // Get label position
-                    const angle = scale.getIndexAngle(index);
-                    const radius = scale.drawingArea + 30; // Position outside the chart
-                    
-                    const x = centerX + Math.cos(angle) * radius;
-                    const y = centerY + Math.sin(angle) * radius;
-                    
-                    // Draw level badge
-                    const badgeColors = {
-                        'FOUNDATIONAL': '#ef4444',
-                        'INTERMEDIATE': '#f59e0b', 
-                        'ADVANCED': '#10b981',
-                        'EXPERT': '#8b5cf6'
-                    };
-                    
-                    const badgeColor = badgeColors[level];
-                    const badgeWidth = 80;
-                    const badgeHeight = 18;
-                    
-                    // Position badge below the score
-                    const badgeX = x - badgeWidth / 2;
-                    const badgeY = y + 15;
-                    
-                    // Draw rounded rectangle for badge
-                    ctx.save();
-                    ctx.fillStyle = badgeColor;
-                    ctx.beginPath();
-                    ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 9);
-                    ctx.fill();
-                    
-                    // Draw badge text
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 9px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(level, x, badgeY + badgeHeight / 2);
-                    ctx.restore();
-                });
-            }
-        };
-
-        // Register the plugin
-        Chart.register(levelBadgePlugin);
+        // Create the spider chart with scores and level badges
         function createSpiderChart(scores) {
             console.log("=== CREATING SPIDER CHART ===");
             
@@ -631,12 +607,13 @@
                                     size: 10,
                                     weight: '600'
                                 },
-                                color: '#495057', // Keep labels in dark gray/black
+                                color: '#495057',
                                 callback: function(label, index) {
                                     const area = areas[index];
                                     const score = scores[area];
-                                    // Display area name with score only
-                                    return [area, `${score.toFixed(2)}`];
+                                    const level = getCompetenceLevel(score);
+                                    // Display area name, score, and level with visual formatting
+                                    return [area, `${score.toFixed(2)} - ${level}`];
                                 }
                             },
                             ticks: {
@@ -655,8 +632,7 @@
                     plugins: {
                         legend: {
                             display: false
-                        },
-                        levelBadges: true // Enable our custom plugin
+                        }
                     },
                     elements: {
                         line: {
@@ -697,6 +673,36 @@
             }
         }
 
+        // Create level badges section below spider chart
+        function createLevelBadges(scores) {
+            const badgesContainer = document.getElementById('levelBadges');
+            
+            for (const [area, score] of Object.entries(scores)) {
+                const level = getCompetenceLevel(score);
+                const badgeClass = getLevelBadgeClass(level);
+                
+                const areaBadge = document.createElement('div');
+                areaBadge.className = 'area-badge';
+                
+                const areaName = document.createElement('div');
+                areaName.className = 'area-name';
+                areaName.textContent = area;
+                
+                const areaScore = document.createElement('div');
+                areaScore.className = 'area-score';
+                areaScore.textContent = score.toFixed(2);
+                
+                const levelBadge = document.createElement('span');
+                levelBadge.className = `level-badge ${badgeClass}`;
+                levelBadge.textContent = level;
+                
+                areaBadge.appendChild(areaName);
+                areaBadge.appendChild(areaScore);
+                areaBadge.appendChild(levelBadge);
+                badgesContainer.appendChild(areaBadge);
+            }
+        }
+
         // Calculate and display overall score
         function displayOverallScore(scores) {
             const overallScore = Object.values(scores).reduce((sum, score) => sum + score, 0) / Object.values(scores).length;
@@ -731,8 +737,9 @@
                 document.getElementById('debug').style.display = 'none';
                 document.getElementById('chartArea').style.display = 'block';
                 
-                // Create chart and display overall score
+                // Create chart, level badges and display overall score
                 createSpiderChart(scores);
+                createLevelBadges(scores);
                 displayOverallScore(scores);
                 
                 console.log('✅ Visualization created successfully');
