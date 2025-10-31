@@ -259,10 +259,6 @@
                     <div class="score" id="overallScore">-</div>
                     <div id="overallLevel">-</div>
                 </div>
-
-                <div class="competence-summary" id="competenceSummary">
-                    <!-- Competence areas with scores and badges will be populated here -->
-                </div>
             </div>
         </div>
     </div>
@@ -574,22 +570,13 @@
                                     size: 10,
                                     weight: '600'
                                 },
-                                color: function(context) {
-                                    const area = areas[context.index];
-                                    const score = scores[area];
-                                    const level = getCompetenceLevel(score);
-                                    // Color labels based on competence level
-                                    if (level === 'EXPERT') return '#8b5cf6';
-                                    if (level === 'ADVANCED') return '#10b981';
-                                    if (level === 'INTERMEDIATE') return '#f59e0b';
-                                    return '#ef4444'; // FOUNDATIONAL
-                                },
+                                color: '#495057', // Keep labels in dark gray/black
                                 callback: function(label, index) {
                                     const area = areas[index];
                                     const score = scores[area];
                                     const level = getCompetenceLevel(score);
-                                    // Display area name with score and level
-                                    return [area, `${score.toFixed(2)} - ${level}`];
+                                    // Display area name with score, level will be shown as badge in summary
+                                    return [area, `${score.toFixed(2)}`];
                                 }
                             },
                             ticks: {
@@ -683,9 +670,8 @@
                 document.getElementById('debug').style.display = 'none';
                 document.getElementById('chartArea').style.display = 'block';
                 
-                // Create chart and summary
+                // Create chart and display overall score
                 createSpiderChart(scores);
-                createCompetenceSummary(scores);
                 displayOverallScore(scores);
                 
                 console.log('✅ Visualization created successfully');
