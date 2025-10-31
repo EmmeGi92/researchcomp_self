@@ -275,11 +275,6 @@
                     <canvas id="spiderChart"></canvas>
                 </div>
                 
-                <!-- Level badges for each competence area -->
-                <div class="level-badges-section" id="levelBadges">
-                    <!-- Will be populated with colored badges for each area -->
-                </div>
-                
                 <div class="legend">
                     <div class="legend-item">
                         <span class="legend-dot user-dot"></span>
@@ -552,13 +547,24 @@
             return level.toLowerCase();
         }
 
-        // Create the spider chart with scores and level badges
+        // Create the spider chart with colored points based on competence levels
         function createSpiderChart(scores) {
             console.log("=== CREATING SPIDER CHART ===");
             
             const areas = Object.keys(competenceAreas);
             const userData = areas.map(label => scores[label]);
             const referenceData = areas.map(label => referenceValues[label]);
+            
+            // Create colored points based on competence levels
+            const pointColors = areas.map(area => {
+                const level = getCompetenceLevel(scores[area]);
+                switch(level) {
+                    case 'EXPERT': return '#8b5cf6';
+                    case 'ADVANCED': return '#10b981';
+                    case 'INTERMEDIATE': return '#f59e0b';
+                    default: return '#ef4444'; // FOUNDATIONAL
+                }
+            });
 
             const ctx = document.getElementById('spiderChart').getContext('2d');
             
@@ -571,11 +577,11 @@
                         data: userData,
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                        pointBackgroundColor: '#3b82f6',
+                        pointBackgroundColor: pointColors, // Use colored points
                         pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
+                        pointRadius: 8, // Slightly larger points
+                        pointHoverRadius: 10,
                         borderWidth: 3
                     }, {
                         label: 'Average other researchers',
@@ -612,7 +618,7 @@
                                     const area = areas[index];
                                     const score = scores[area];
                                     const level = getCompetenceLevel(score);
-                                    // Display area name, score, and level with visual formatting
+                                    // Display area name, score, and level
                                     return [area, `${score.toFixed(2)} - ${level}`];
                                 }
                             },
@@ -737,9 +743,8 @@
                 document.getElementById('debug').style.display = 'none';
                 document.getElementById('chartArea').style.display = 'block';
                 
-                // Create chart, level badges and display overall score
+                // Create chart and display overall score
                 createSpiderChart(scores);
-                createLevelBadges(scores);
                 displayOverallScore(scores);
                 
                 console.log('✅ Visualization created successfully');
