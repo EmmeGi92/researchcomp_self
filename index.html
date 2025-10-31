@@ -282,7 +282,7 @@
                     </div>
                     <div class="legend-item">
                         <span class="legend-dot reference-line"></span>
-                        Average other researchers (3)
+                        Average other researchers (3.0)
                     </div>
                 </div>
 
@@ -330,15 +330,15 @@
             }
         };
 
-        // Reference values for comparison (Average other researcher level = 3)
+        // Reference values for comparison (Average other researcher level = 3.0)
         const referenceValues = {
-            'Doing Research': 3,
-            'Managing Research': 3,
-            'Making an Impact': 3,
-            'Self-Management': 3,
-            'Working with Others': 3,
-            'Cognitive Abilities': 3,
-            'Managing Research Tools': 3
+            'Doing Research': 3.0,
+            'Managing Research': 3.0,
+            'Making an Impact': 3.0,
+            'Self-Management': 3.0,
+            'Working with Others': 3.0,
+            'Cognitive Abilities': 3.0,
+            'Managing Research Tools': 3.0
         };
 
         // Convert LimeSurvey values to numeric scale
@@ -623,7 +623,7 @@
                                 }
                             },
                             ticks: {
-                                beginAtZero: true,
+                                beginAtZero: false,
                                 min: 1,
                                 max: 5,
                                 stepSize: 1,
@@ -631,7 +631,8 @@
                                 backdropColor: 'rgba(255, 255, 255, 0.8)',
                                 font: {
                                     size: 10
-                                }
+                                },
+                                display: true
                             }
                         }
                     },
