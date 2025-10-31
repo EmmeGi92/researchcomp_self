@@ -622,6 +622,10 @@
                                     return [area, `${score.toFixed(2)} - ${level}`];
                                 }
                             },
+                            suggestedMin: 1,
+                            suggestedMax: 5,
+                            min: 1,
+                            max: 5,
                             ticks: {
                                 beginAtZero: false,
                                 min: 1,
@@ -632,7 +636,8 @@
                                 font: {
                                     size: 10
                                 },
-                                display: true
+                                display: true,
+                                count: 5
                             }
                         }
                     },
